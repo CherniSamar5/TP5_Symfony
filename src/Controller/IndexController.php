@@ -15,6 +15,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Form\FormFactoryInterface;
+use App\Form\ArticleType;
+
+
 
 
 
@@ -52,24 +55,20 @@ class IndexController extends AbstractController
 
 
     #[Route('/article/new', name:'new_article')]
-    public function new(Request $request,ManagerRegistry $doctrine):Response
-    {
+    public function new(Request $request, ManagerRegistry $doctrine) {
         $article = new Article();
-        $form = $this->createFormBuilder($article)
-        ->add('nom', TextType::class)
-        ->add('prix', TextType::class)
-        ->add('save', SubmitType::class, array('label' => 'Créer'))
-        ->getForm();
+        $form = $this->createForm(ArticleType::class,$article);
         $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
+        if($form->isSubmitted() && $form->isValid()) {
             $article = $form->getData();
             $entityManager = $doctrine->getManager();
             $entityManager->persist($article);
             $entityManager->flush();
             return $this->redirectToRoute('article_list');
-            }
-            return $this->render('articles/new.html.twig', ['form' => $form->createView()]);
+        }
+        return $this->render('articles/new.html.twig',['form' => $form->createView()]);
     }
+        
 
     #[Route('/article/{id}', name:'article_show')]
     public function show($id,ManagerRegistry $doctrine): Response {
@@ -79,22 +78,19 @@ class IndexController extends AbstractController
 
 
     #[Route('/article/edit/{id}', name: 'edit_article')]
-    public function edit(Request $request, $id, ManagerRegistry $doctrine)
-    {
-        $article = new Article();
-        $article = $doctrine->getRepository(Article::class)->find($id);
-        $form = $this->createFormBuilder($article)
-        ->add('nom', TextType::class)
-        ->add('prix', TextType::class)
-        ->add('save', SubmitType::class, array('label' => 'Modifier'))->getForm();
-        $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
-        $entityManager = $doctrine->getManager();
-        $entityManager->flush();
-        return $this->redirectToRoute('article_list');
+    public function edit(Request $request, $id ,ManagerRegistry $doctrine)
+        {
+                $article = new Article();
+                $article = $doctrine->getRepository(Article::class)->find($id);
+                $form = $this->createForm(ArticleType::class,$article);
+                $form->handleRequest($request);
+                if($form->isSubmitted() && $form->isValid()) {
+                    $entityManager=$doctrine->getManager();
+                    $entityManager->flush();
+                return $this->redirectToRoute('article_list');
+                }
+            return $this->render('articles/edit.html.twig', ['form' =>$form->createView()]);
         }
-        return $this->render('articles/edit.html.twig', ['form' => $form->createView()]);
-    }
 
 
     #[Route('/article/delete/{id}', name: 'delete_article')]
